@@ -243,9 +243,9 @@ class MCPAppApi(Resource):
         """Get end user - manages its own database session"""
         return session.scalar(
             select(EndUser)
-            .where(EndUser.tenant_id == tenant_id)
-            .where(EndUser.session_id == mcp_server_id)
-            .where(EndUser.type == EndUserType.MCP)
+            .where(
+                EndUser.tenant_id == tenant_id, EndUser.session_id == mcp_server_id, EndUser.type == EndUserType.MCP
+            )
             .limit(1)
         )
 
