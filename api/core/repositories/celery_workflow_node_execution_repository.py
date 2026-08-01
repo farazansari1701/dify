@@ -219,3 +219,10 @@ class CeleryWorkflowNodeExecutionRepository(WorkflowNodeExecutionRepository):
                 workflow_execution_id,
             )
             return []
+
+    @override
+    def get_max_index(self, workflow_execution_id: str) -> int:
+        # A handoff resumes in a new worker with a fresh in-memory cache. Read
+        # the durable SQL state so the next segment continues the logical run's
+        # node sequence instead of starting again at one.
+        return self._sql_repository.get_max_index(workflow_execution_id)

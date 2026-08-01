@@ -11,6 +11,7 @@ from core.app.apps.draft_variable_saver import (
     DraftVariableSaverFactory,
     NoopDraftVariableSaver,
 )
+from core.app.apps.streaming_utils import StreamEventWithCursor, close_stream
 from core.app.entities.app_invoke_entities import InvokeFrom, UserFrom
 from core.app.file_access import DatabaseFileAccessController, FileAccessScope, bind_file_access_scope
 from extensions.ext_database import db
@@ -91,6 +92,7 @@ class BaseAppGenerator:
         try:
             yield from response_stream
         finally:
+            close_stream(response_stream)
             BaseAppGenerator._join_worker_thread(worker_thread)
 
     @staticmethod
@@ -300,7 +302,10 @@ class BaseAppGenerator:
         return value
 
     @classmethod
-    def convert_to_event_stream(cls, generator: Union[Mapping, Generator[Mapping | str, None, None]]):
+    def convert_to_event_stream(
+        cls,
+        generator: Union[Mapping, Generator[Mapping | StreamEventWithCursor | str, None, None]],
+    ):
         """
         Convert messages into event stream
         """
@@ -309,11 +314,16 @@ class BaseAppGenerator:
         else:
 
             def gen():
-                for message in generator:
-                    if isinstance(message, Mapping | dict):
-                        yield f"data: {orjson_dumps(message)}\n\n"
-                    else:
-                        yield f"event: {message}\n\n"
+                try:
+                    for message in generator:
+                        if isinstance(message, StreamEventWithCursor):
+                            yield f"id: {message.cursor}\ndata: {orjson_dumps(message.event)}\n\n"
+                        elif isinstance(message, Mapping | dict):
+                            yield f"data: {orjson_dumps(message)}\n\n"
+                        else:
+                            yield f"event: {message}\n\n"
+                finally:
+                    close_stream(generator)
 
             return gen()
 
