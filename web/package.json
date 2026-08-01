@@ -173,7 +173,7 @@
     "@next/bundle-analyzer": "16.1.5",
     "@next/eslint-plugin-next": "16.1.6",
     "@next/mdx": "16.1.5",
-    "@rgrove/parse-xml": "4.2.0",
+    "@rgrove/parse-xml": "4.2.3",
     "@serwist/turbopack": "9.5.0",
     "@storybook/addon-docs": "10.2.0",
     "@storybook/addon-links": "10.2.0",
